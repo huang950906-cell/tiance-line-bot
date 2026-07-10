@@ -1,5 +1,6 @@
 const express = require("express");
 const line = require("@line/bot-sdk");
+const { activityFlexMessage } = require("./flex");
 
 const config = {
   channelSecret: process.env.CHANNEL_SECRET,
@@ -28,14 +29,42 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 });
 
 async function handleEvent(event) {
-  // 目前只處理文字訊息
+  // 只處理文字訊息
   if (event.type !== "message" || event.message.type !== "text") {
     return null;
   }
 
   const userMessage = event.message.text.trim();
 
+  // 測試
+  if (userMessage === "測試") {
+    return client.replyMessage({
+      replyToken: event.replyToken,
+      messages: [
+        {
+          type: "text",
+          text: "天策官方賴連線成功！",
+        },
+      ],
+    });
+  }
 
+  // 活動登記
+  if (userMessage === "活動登記") {
+    return client.replyMessage({
+      replyToken: event.replyToken,
+      messages: [
+        activityFlexMessage,
+        {
+          type: "text",
+          text: `會員帳號：
+優惠選項：
+
+稍等客服幫您查詢是否符合領取資格`,
+        },
+      ],
+    });
+  }
 
   return null;
 }
