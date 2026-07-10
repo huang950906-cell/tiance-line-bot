@@ -1,0 +1,16 @@
+{
+  "name": "tiance-line-bot",
+  "version": "1.0.0",
+  "description": "天策 LINE 官方帳號機器人",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^11.1.0",
+    "express": "^5.1.0"
+  }
+}
