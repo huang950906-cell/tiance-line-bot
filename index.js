@@ -4,40 +4,57 @@ const { activityFlexMessage } = require("./flex");
 
 const config = {
   channelSecret: process.env.CHANNEL_SECRET,
+  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
 };
 
-const client = line.LineBotClient.fromChannelAccessToken({
-  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+const client = new line.messagingApi.MessagingApiClient({
+  channelAccessToken: config.channelAccessToken,
 });
 
 const app = express();
 
-// 首頁測試
+// ====================
+// Render 首頁
+// ====================
 app.get("/", (req, res) => {
-  res.send("天策 LINE Bot 運作中");
+  res.status(200).send("OK");
 });
 
+// ====================
+// Health Check（給 UptimeRobot 用）
+// ====================
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "tiance-line-bot",
+    time: new Date().toISOString(),
+  });
+});
+
+// ====================
 // LINE Webhook
+// ====================
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
     await Promise.all(req.body.events.map(handleEvent));
     res.status(200).end();
-  } catch (error) {
-    console.error("Webhook 發生錯誤：", error);
+  } catch (err) {
+    console.error(err);
     res.status(500).end();
   }
 });
 
+// ====================
+// 關鍵字
+// ====================
 async function handleEvent(event) {
-  // 只處理文字訊息
-  if (event.type !== "message" || event.message.type !== "text") {
-    return null;
-  }
+  if (event.type !== "message") return null;
+  if (event.message.type !== "text") return null;
 
-  const userMessage = event.message.text.trim();
+  const text = event.message.text.trim();
 
   // 測試
-  if (userMessage === "測試") {
+  if (text === "測試") {
     return client.replyMessage({
       replyToken: event.replyToken,
       messages: [
@@ -50,14 +67,15 @@ async function handleEvent(event) {
   }
 
   // 活動登記
-  if (userMessage === "活動登記") {
+  if (text === "活動登記") {
     return client.replyMessage({
       replyToken: event.replyToken,
       messages: [
         activityFlexMessage,
         {
           type: "text",
-          text: `會員帳號：
+          text:
+`會員帳號：
 優惠選項：
 
 稍等客服幫您查詢是否符合領取資格`,
@@ -69,8 +87,11 @@ async function handleEvent(event) {
   return null;
 }
 
-const port = process.env.PORT || 3000;
+// ====================
+// 啟動
+// ====================
+const PORT = process.env.PORT || 10000;
 
-app.listen(port, () => {
-  console.log(`天策 LINE Bot 已啟動，Port：${port}`);
+app.listen(PORT, () => {
+  console.log(`天策 LINE Bot 已啟動，Port：${PORT}`);
 });
